@@ -1,4 +1,3 @@
-## no critic
 package Log::File::Rolling;
 
 use 5.006001;
@@ -8,7 +7,7 @@ use warnings;
 use Time::Piece;
 use Fcntl ':flock'; # import LOCK_* constants
 
-our $VERSION = '1.09';
+our $VERSION = '0.100';
 
 
 
@@ -142,20 +141,19 @@ __END__
 
 =head1 NAME
 
-Log::File::Rolling - Object for logging to date/time/pid
-stamped files
+Log::File::Rolling - Log to date/time-stamped files
 
 =head1 SYNOPSIS
 
   use Log::File::Rolling;
 
-  my $file = Log::File::Rolling->new(
-                                filename => 'myapp.%Y-%m-%d.log',
-                                current_symlink => 'myapp.log.current',
-                                timezone => 'localtime',
-                            );
+  my $logger = Log::File::Rolling->new(
+                   filename => 'myapp.%Y-%m-%d.log',
+                   current_symlink => 'myapp.log.current',
+                   timezone => 'localtime',
+               );
 
-  $file->log("My log message\n");
+  $logger->log("My log message\n");
 
 =head1 ABSTRACT
 
@@ -208,6 +206,8 @@ Takes a message as an argument which will be stringified and appended to the cur
 L<The Log-File-Rolling github repo|https://github.com/hoytech/Log-File-Rolling>
 
 L<Log::Dispatch::File::Rolling>
+
+Looking for functionality like log-levels and message time-stamping? Check out L<Log::Defer>.
 
 =head1 AUTHOR
 

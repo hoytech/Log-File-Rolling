@@ -1,7 +1,38 @@
-HISTORY
-    1.10    Forked from Michael Jacob's Log::Dispatch::File::Rolling,
-            which in turn was based on code from Eric Cholet and
-            Mark Pfeiffer -- see the POD.
+Log::File::Rolling HISTORY
+
+0.100  2016-03-07
+
+*  Forked by Doug Hoyte from Michael Jacob's Log::Dispatch::File::Rolling,
+   which in turn was based on code from Eric Cholet and Mark Pfeiffer
+   (see POD for exact lineage).
+
+* Applied my current symlink patch (rt #95900)
+
+* Fixed long-standing bug where an unformatted log filename
+  (with the % characters) would be created alongside your logs.
+
+* Allows you to choose between logging in localtime versus UTC with
+  the timezone parameter. The default is UTC ("gmtime").
+
+* Got rid log Log4Perl dependency. Uses normal strftime format
+  instead of Log::Log4perl::DateFormat's home-brewed version.
+
+* Optimisation: Caches filenames so they are generated at most
+  once per second.
+
+* Got rid of Log::Dispatch::* dependencies. Now just directly opens
+  the files.
+
+* Removed a lot of (IMHO not hugely useful) functionality such as
+  automatic creation of formats, PIDs in formats, and a lot of the
+  stuff Log::Dispatch included. For things like log levels, please
+  see Log::Defer.
+
+* Code formatting (unix instead of DOS lines, spaces instead of tabs)
+
+
+
+Log::Dispatch::File::Rolling HISTORY
 
     1.09    Dependency change of 1.08 was missing from the Makefile.PL.
             Oops.

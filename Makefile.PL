@@ -6,6 +6,7 @@ my %args = (
     NAME => 'Log::File::Rolling',
     VERSION_FROM => 'lib/Log/File/Rolling.pm',
     PREREQ_PM => {
+      'Time::Piece' => 0,
     },
     AUTHOR => 'M. Jacob <jacob@j-e-b.net>', ## Forked from Log::Dispatch::File::Rolling 1.09
     LICENSE => 'perl',

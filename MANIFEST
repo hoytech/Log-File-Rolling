@@ -1,16 +1,14 @@
-Makefile.PL
-MANIFEST
-README
 Changes
 lib/Log/File/Rolling.pm
-t/1.t
-t/2.t
-t/3.t
-t/4.t
-t/5.t
-t/6.t
+Makefile.PL
+MANIFEST
+META.json			Module JSON meta-data (added by MakeMaker)
 META.yml
+README
+t/1.t
+t/3.t
+t/6.t
+t/6currentsymlink.t
 t/7testpod.t
 t/8coverage.t
 t/9reopenfh.t
-META.json                                Module JSON meta-data (added by MakeMaker)
