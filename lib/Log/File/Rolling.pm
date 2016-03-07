@@ -137,32 +137,30 @@ __END__
 
 =head1 NAME
 
-Log::Dispatch::File::Rolling - Object for logging to date/time/pid
+Log::File::Rolling - Object for logging to date/time/pid
 stamped files
 
 =head1 SYNOPSIS
 
-  use Log::Dispatch::File::Rolling;
+  use Log::File::Rolling;
 
-  my $file = Log::Dispatch::File::Rolling->new(
-                             name      => 'file1',
-                             min_level => 'info',
-                             filename  => 'Somefile%d{yyyyMMdd}.log',
-                             mode      => 'append' );
+  my $file = Log::File::Rolling->new(
+                                filename => 'myapp.%Y-%m-%d.log',
+                                current_symlink => 'myapp.log.current',
+                                timezone => 'localtime',
+                            );
 
-  $file->log( level => 'emerg',
-              message => "I've fallen and I can't get up\n" );
+  $file->log("My log message\n");
 
 =head1 ABSTRACT
 
-This module provides an object for logging to files under the
-Log::Dispatch::* system.
+This module provides an object for logging to files. The log file will be "rolled" over to the next file whenever the filename changes according to the C<filename> format parameter. When this occurs, an optional C<current_symlink> file will be pointed to the current file.
 
 =head1 DESCRIPTION
 
-This module subclasses Log::Dispatch::File for logging to date/time
-stamped files. See L<Log::Dispatch::File> for instructions on usage.
-This module differs only on the following three points:
+This module was forked from the L<Log::Dispatch::File::Rolling> to add the symlink feature and fix a few other minor issues (see the C<Changes> file for details).
+
+Similar to the original, this module should also have these properties:
 
 =over 4
 
@@ -176,30 +174,11 @@ This module uses flock() to lock the file while writing to it.
 
 =item stamped filenames
 
-This module supports a special tag in the filename that will expand to
-the current date/time/pid.
-
-It is the same tag Log::Log4perl::Layout::PatternLayout uses, see
-L<Log::Log4perl::Layout::PatternLayout>, chapter "Fine-tune the date".
-In short: Include a "%d{...}" in the filename where "..." is a format
-string according to the SimpleDateFormat in the Java World
-(http://java.sun.com/j2se/1.3/docs/api/java/text/SimpleDateFormat.html).
-See also L<Log::Log4perl::DateFormat> for information about further
-restrictions.
-
-In addition to the format provided by Log::Log4perl::DateFormat this
-module also supports '$' for inserting the PID. Repeat the character to
-define how many character wide the field should be. This should not be
-needed regularly as this module also supports logfile sharing between
-processes, but if you've got a high load on your logfile or a system
-that doesn't support flock()...
+This module's "stamped" filenames are rendered with L<Time::Piece>'s C<strftime> function. By default it uses C<gmtime> for UTC timestamps, but this can be changed by passing C<localtime> into the constructor's C<timezone> parameter (see the synopsis).
 
 =item current symlinks
 
-If you pass in C<current_symlink> to the constructor, it will create a
-symlink at your provided filename. This symlink will always link to the
-most recent log file. You can then use C<tail -F> to monitor an application's
-logs with no interruptions even when the filename rolls over.
+If you pass in C<current_symlink> to the constructor, it will create a symlink at your provided filename. This symlink will always link to the most recent log file. You can then use C<tail -F> to monitor an application's logs with no interruptions even when the filename rolls over.
 
 =back
 
@@ -209,27 +188,29 @@ logs with no interruptions even when the filename rolls over.
 
 =item new()
 
-See L<Log::Dispatch::File> and chapter DESCRIPTION above.
+Constructs an object. An empty file will be created at this point.
 
 =item log()
 
-See L<Log::Dispatch::File> and chapter DESCRIPTION above.
+Takes a message as an argument which will be stringified and appended to the current file.
 
 =back
 
 =head1 SEE ALSO
 
-L<Log::Dispatch::File>, L<Log::Log4perl::Layout::PatternLayout>,
-http://java.sun.com/j2se/1.3/docs/api/java/text/SimpleDateFormat.html,
-L<Log::Log4perl::DateFormat>, 'perldoc -f flock', 'perldoc -f fork'.
+L<The Log-File-Rolling github repo|https://github.com/hoytech/Log-File-Rolling>
+
+L<Log::Dispatch::File::Rolling>
 
 =head1 AUTHOR
 
 M. Jacob, E<lt>jacob@j-e-b.netE<gt>
 
+This module was forked from L<Log::Dispatch::File::Rolling> by Doug Hoyte.
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2003, 2004, 2007, 2010, 2013 M. Jacob E<lt>jacob@j-e-b.netE<gt>
+Copyright (C) 2003, 2004, 2007, 2010, 2013 M. Jacob E<lt>jacob@j-e-b.netE<gt>, 2016 Doug Hoyte
 
 Based on:
 
