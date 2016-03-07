@@ -1,25 +1,23 @@
-use 5.006001;
+use strict;
+
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile(
-    'NAME'          => 'Log::Dispatch::File::Rolling',
-    'VERSION_FROM'  => 'lib/Log/Dispatch/File/Rolling.pm', # finds $VERSION
-    'PREREQ_PM'     => {
-        'Log::Log4perl' => '0.32',
-        'Log::Dispatch' => '2.37',
-#        'Pod::Readme'   => '0.05', # only needed for 'make dist'
+
+my %args = (
+    NAME => 'Log::File::Rolling',
+    VERSION_FROM => 'lib/Log/File/Rolling.pm',
+    PREREQ_PM => {
     },
-    ($] >= 5.005 ? (   ## Add these new keywords supported since 5.005
-        ABSTRACT_FROM   => 'lib/Log/Dispatch/File/Rolling.pm', # retrieve abstract from module
-        AUTHOR          => 'M. Jacob <jacob@j-e-b.net>') : (),
-        LICENSE         => 'perl',
-        depend          => {
-            create_distdir  => 'Changes',
-            Changes         => 'lib/Log/Dispatch/File/Rolling.pm'."\n\t".q[$(FULLPERLRUN) -MPod::Readme -e 'Pod::Readme->new( readme_type => "changes" )->parse_from_file( "lib/Log/Dispatch/File/Rolling.pm", "Changes" )']."\n\n",
-        },
-        realclean       => {
-            FILES           => "Changes"
-        },
-    ),
+    AUTHOR => 'M. Jacob <jacob@j-e-b.net>', ## Forked from Log::Dispatch::File::Rolling 1.09
+    LICENSE => 'perl',
+    dist => {
+      PREOP => 'pod2text $(VERSION_FROM) > $(DISTVNAME)/README',
+    },
+    META_MERGE => {
+      resources => {
+        repository => 'git://github.com/hoytech/Log-File-Rolling.git',
+        bugtracker => 'https://github.com/hoytech/Log-File-Rolling/issues',
+      },
+    },
 );
+
+WriteMakefile(%args)
