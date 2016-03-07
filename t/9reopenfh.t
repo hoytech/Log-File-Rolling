@@ -7,10 +7,10 @@ use Test::More;
 eval "
 use Test::Fork; ";
 plan skip_all => "Test::Fork required for this test" if $@;
-plan tests => 12;
+plan tests => 11;
 
 use Log::Dispatch;
-use Log::Dispatch::File::Rolling;
+use Log::File::Rolling;
 ok(1); # If we made it this far, we're ok.
 
 #########################1
@@ -26,7 +26,7 @@ my %params = (
     filename  => 'logfile.txt',
 );
 
-my $Rolling = Log::Dispatch::File::Rolling->new(%params);
+my $Rolling = Log::File::Rolling->new(%params);
 ok($Rolling);
 
 #########################3
@@ -62,14 +62,8 @@ $dispatcher = $Rolling = undef;
 
 ok(1);
 
-#########################6
-
-my @logfiles = glob('logfile*.txt');
-
-ok(scalar(@logfiles) == 1 or scalar(@logfiles) == 2);
-
 #########################7
 
-foreach my $file (@logfiles) {
+foreach my $file ('logfile.txt') {
     unlink $file;
 }

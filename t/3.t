@@ -6,9 +6,9 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test;
-BEGIN { plan tests => 8 };
+BEGIN { plan tests => 7 };
 use Log::Dispatch;
-use Log::Dispatch::File::Rolling;
+use Log::File::Rolling;
 ok(1); # If we made it this far, we're ok.
 
 #########################1
@@ -24,7 +24,7 @@ my %params = (
     filename  => 'logfile.txt',
 );
 
-my $Rolling = Log::Dispatch::File::Rolling->new(%params);
+my $Rolling = Log::File::Rolling->new(%params);
 ok($Rolling);
 
 #########################3
@@ -47,17 +47,11 @@ $dispatcher = $Rolling = undef;
 
 ok(1);
 
-#########################6
-
-my @logfiles = glob('logfile*.txt');
-
-ok(scalar(@logfiles) == 1 or scalar(@logfiles) == 2);
-
 #########################7
 
 my $content = '';
 
-foreach my $file (@logfiles) {
+foreach my $file ('logfile.txt') {
     open F, '<', $file;
     local $/ = undef;
     $content .= <F>;

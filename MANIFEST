@@ -2,7 +2,7 @@ Makefile.PL
 MANIFEST
 README
 Changes
-lib/Log/Dispatch/File/Rolling.pm
+lib/Log/File/Rolling.pm
 t/1.t
 t/2.t
 t/3.t

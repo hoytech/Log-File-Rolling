@@ -1,32 +1,16 @@
 ## no critic
-package Log::Dispatch::File::Rolling;
+package Log::File::Rolling;
 
 use 5.006001;
 use strict;
 use warnings;
 
 use Log::Dispatch::File '2.37';
-use Log::Log4perl::DateFormat;
+our @ISA = qw(Log::Dispatch::File);
+use Time::Piece;
 use Fcntl ':flock'; # import LOCK_* constants
 
-our @ISA = qw(Log::Dispatch::File);
-
 our $VERSION = '1.09';
-
-our $TIME_HIRES_AVAILABLE = undef;
-
-BEGIN { # borrowed from Log::Log4perl::Layout::PatternLayout, Thanks!
-    # Check if we've got Time::HiRes. If not, don't make a big fuss,
-    # just set a flag so we know later on that we can't have fine-grained
-    # time stamps
-
-    eval { require Time::HiRes; };
-    if ($@) {
-        $TIME_HIRES_AVAILABLE = 0;
-    } else {
-        $TIME_HIRES_AVAILABLE = 1;
-    }
-}
 
 # Preloaded methods go here.
 
@@ -44,23 +28,11 @@ sub new {
     # base class initialization
     $self->_basic_init(%p);
 
-    # split pathname into path, basename, extension
-    if ($p{filename} =~ /^(.*)\%d\{([^\}]*)\}(.*)$/) {
-        $self->{rolling_filename_prefix}  = $1;
-        $self->{rolling_filename_postfix} = $3;
-        $self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new($2);
-        $self->{filename} = $self->_createFilename();
-    } elsif ($p{filename} =~ /^(.*)(\.[^\.]+)$/) {
-        $self->{rolling_filename_prefix}  = $1;
-        $self->{rolling_filename_postfix} = $2;
-        $self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new('-yyyy-MM-dd');
-        $self->{filename} = $self->_createFilename();
-    } else {
-        $self->{rolling_filename_prefix}  = $p{filename};
-        $self->{rolling_filename_postfix} = '';
-        $self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new('.yyyy-MM-dd');
-        $self->{filename} = $self->_createFilename();
-    }
+    $self->{timezone} = $p{timezone} || 'gmtime';
+    die "unsupported timezone: '$self->{timezone}' (currently must be 'localtime' or 'gmtime')"
+        if $self->{timezone} ne 'localtime' && $self->{timezone} ne 'gmtime';
+
+    $self->{filename_format} = $p{filename};
 
     if (exists $p{current_symlink}) {
         $self->{current_symlink} = $p{current_symlink};
@@ -157,26 +129,9 @@ sub _unlock { # borrowed from Log::Dispatch::FileRotate, Thanks!
     return 1;
 }
 
-sub _current_time { # borrowed from Log::Log4perl::Layout::PatternLayout, Thanks!
-    # Return secs and optionally msecs if we have Time::HiRes
-    if($TIME_HIRES_AVAILABLE) {
-        return (Time::HiRes::gettimeofday());
-    } else {
-        return (time(), 0);
-    }
-}
-
 sub _createFilename {
     my $self = shift;
-    return $self->{rolling_filename_prefix}
-         . $self->_format()
-         . $self->{rolling_filename_postfix};
-}
-
-sub _format {
-    my $self = shift;
-    my $result = $self->{rolling_filename_format}->format($self->_current_time());
-    $result =~ s/(\$+)/sprintf('%0'.length($1).'.'.length($1).'u', $$)/eg;
+    my $result = Time::Piece->${\$self->{timezone}}->strftime($self->{filename_format});
     return $result;
 }
 

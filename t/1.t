@@ -7,7 +7,7 @@
 
 use Test;
 BEGIN { plan tests => 1 };
-use Log::Dispatch::File::Rolling;
+use Log::File::Rolling;
 ok(1); # If we made it this far, we're ok.
 
 #########################

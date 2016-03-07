@@ -8,7 +8,7 @@
 use Test;
 BEGIN { plan tests => 9 };
 use Log::Dispatch;
-use Log::Dispatch::File::Rolling;
+use Log::File::Rolling;
 ok(1); # If we made it this far, we're ok.
 
 #########################1
@@ -23,11 +23,11 @@ my $curr_symlink_filename = 'currsym';
 my %params = (
     name      => 'file',
     min_level => 'debug',
-    filename  => 'logfile',
+    filename  => 'logfile.%Y-%m-%d.txt',
     current_symlink => $curr_symlink_filename,
 );
 
-my $Rolling = Log::Dispatch::File::Rolling->new(%params);
+my $Rolling = Log::File::Rolling->new(%params);
 ok($Rolling);
 
 #########################3
