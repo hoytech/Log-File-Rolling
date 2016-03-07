@@ -62,6 +62,10 @@ sub new {
 		$self->{filename} = $self->_createFilename();
 	}
 
+	if (exists $p{current_symlink}) {
+		$self->{current_symlink} = $p{current_symlink};
+	}
+
 	$self->{rolling_fh_pid} = $$;
 	$self->_make_handle();
 
@@ -79,7 +83,7 @@ sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
 	}
 
 	if ( $self->{close} ) {
-		$self->_open_file;
+		$self->_rolling_open_file;
 		$self->_lock();
 		my $fh = $self->{fh};
 		print $fh $p{message};
@@ -90,7 +94,9 @@ sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
 		my $inode  = (stat($self->{fh}))[1];         # get real inode
 		my $finode = (stat($self->{filename}))[1];   # Stat the name for comparision
 		if(!defined($finode) || $inode != $finode) { # Oops someone moved things on us. So just reopen our log
-			$self->_open_file;
+			$self->_rolling_open_file;
+		} elsif (!$self->{current_symlink_inited}) {
+			$self->_update_current_symlink;
 		}
 		$self->_lock();
 		my $fh = $self->{fh};
@@ -98,12 +104,43 @@ sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
 		$self->_unlock();
 	} else {
 		$self->{rolling_fh_pid} = $$;
-		$self->_open_file;
+		$self->_rolling_open_file;
 		$self->_lock();
 		my $fh = $self->{fh};
 		print $fh $p{message};
 		$self->_unlock();
 	}
+}
+
+sub _rolling_open_file {
+	my $self = shift;
+
+	$self->_open_file;
+
+	$self->_update_current_symlink;
+}
+
+sub _update_current_symlink {
+	my $self = shift;
+
+	return if !exists $self->{current_symlink};
+
+	my $current_symlink_value = readlink($self->{current_symlink});
+
+	if (!defined $current_symlink_value || $current_symlink_value ne $self->{filename}) {
+		my $temp_symlink_file = "$self->{current_symlink}.temp$$";
+		unlink($temp_symlink_file);
+
+		symlink($self->{filename}, $temp_symlink_file)
+			|| die "unable to create symlink '$temp_symlink_file': $!";
+
+		if (!rename($temp_symlink_file, $self->{current_symlink})) {
+			unlink($temp_symlink_file);
+			die "unable to overwrite symlink '$self->{current_symlink}': $!";
+		}
+	}
+
+	$self->{current_symlink_inited} = 1;
 }
 
 sub _lock { # borrowed from Log::Dispatch::FileRotate, Thanks!
@@ -206,6 +243,13 @@ define how many character wide the field should be. This should not be
 needed regularly as this module also supports logfile sharing between
 processes, but if you've got a high load on your logfile or a system
 that doesn't support flock()...
+
+=item current symlinks
+
+If you pass in C<current_symlink> to the constructor, it will create a
+symlink at your provided filename. This symlink will always link to the
+most recent log file. You can then use C<tail -F> to monitor an application's
+logs with no interruptions even when the filename rolls over.
 
 =back
 
