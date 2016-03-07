@@ -1,0 +1,11 @@
+MANIFEST.bak
+MANIFEST.skip
+Makefile.old
+Makefile$
+README.pod
+.gitignore
+.git/
+blib/
+pm_to_blib
+MYMETA.*
+Log-File-Rolling.*tar[.]gz$

@@ -1,0 +1,8 @@
+README
+Makefile
+Makefile.old
+MYMETA.*
+Log-File-Rolling-*.tar.gz
+blib/
+pm_to_blib
+MANIFEST.bak
