@@ -34,7 +34,7 @@ sub new {
     }
 
     $self->{rolling_fh_pid} = $$;
-    $self->{filename} = $self->_createFilename();
+    $self->_createFilename();
     $self->_rolling_open_file();
 
     return $self;
@@ -44,9 +44,7 @@ sub log { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
     my $self = shift;
     my $message = shift;
 
-    my $filename = $self->_createFilename();
-    if ($filename ne $self->{filename}) {
-        $self->{filename} = $filename;
+    if ($self->_createFilename()) {
         $self->{rolling_fh_pid} = 'x'; # force reopen
     }
 
@@ -119,10 +117,17 @@ sub _unlock { # borrowed from Log::Dispatch::FileRotate, Thanks!
     return 1;
 }
 
+
+## Returns true if the filename changed
 sub _createFilename {
     my $self = shift;
-    my $result = Time::Piece->${\$self->{timezone}}->strftime($self->{filename_format});
-    return $result;
+
+    my $time = time();
+    return 0 if defined $self->{current_filename_time} && $time == $self->{current_filename_time};
+
+    $self->{filename} = Time::Piece->${\$self->{timezone}}->strftime($self->{filename_format});
+    $self->{current_filename_time} = $time;
+    return 1;
 }
 
 1;
@@ -175,6 +180,8 @@ This module uses flock() to lock the file while writing to it.
 =item stamped filenames
 
 This module's "stamped" filenames are rendered with L<Time::Piece>'s C<strftime> function. By default it uses C<gmtime> for UTC timestamps, but this can be changed by passing C<localtime> into the constructor's C<timezone> parameter (see the synopsis).
+
+B<NOTE>: Because of a caching optimisation, files should not be rotated more often than once per second.
 
 =item current symlinks
 
