@@ -16,168 +16,168 @@ our $VERSION = '1.09';
 our $TIME_HIRES_AVAILABLE = undef;
 
 BEGIN { # borrowed from Log::Log4perl::Layout::PatternLayout, Thanks!
-	# Check if we've got Time::HiRes. If not, don't make a big fuss,
-	# just set a flag so we know later on that we can't have fine-grained
-	# time stamps
+    # Check if we've got Time::HiRes. If not, don't make a big fuss,
+    # just set a flag so we know later on that we can't have fine-grained
+    # time stamps
 
-	eval { require Time::HiRes; };
-	if ($@) {
-		$TIME_HIRES_AVAILABLE = 0;
-	} else {
-		$TIME_HIRES_AVAILABLE = 1;
-	}
+    eval { require Time::HiRes; };
+    if ($@) {
+        $TIME_HIRES_AVAILABLE = 0;
+    } else {
+        $TIME_HIRES_AVAILABLE = 1;
+    }
 }
 
 # Preloaded methods go here.
 
 sub new {
-	my $proto = shift;
-	my $class = ref $proto || $proto;
+    my $proto = shift;
+    my $class = ref $proto || $proto;
 
-	my %p = @_;
+    my %p = @_;
 
-	my $self = bless {}, $class;
+    my $self = bless {}, $class;
 
-	# only append mode is supported
-	$p{mode} = 'append';
+    # only append mode is supported
+    $p{mode} = 'append';
 
-	# base class initialization
-	$self->_basic_init(%p);
+    # base class initialization
+    $self->_basic_init(%p);
 
-	# split pathname into path, basename, extension
-	if ($p{filename} =~ /^(.*)\%d\{([^\}]*)\}(.*)$/) {
-		$self->{rolling_filename_prefix}  = $1;
-		$self->{rolling_filename_postfix} = $3;
-		$self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new($2);
-		$self->{filename} = $self->_createFilename();
-	} elsif ($p{filename} =~ /^(.*)(\.[^\.]+)$/) {
-		$self->{rolling_filename_prefix}  = $1;
-		$self->{rolling_filename_postfix} = $2;
-		$self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new('-yyyy-MM-dd');
-		$self->{filename} = $self->_createFilename();
-	} else {
-		$self->{rolling_filename_prefix}  = $p{filename};
-		$self->{rolling_filename_postfix} = '';
-		$self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new('.yyyy-MM-dd');
-		$self->{filename} = $self->_createFilename();
-	}
+    # split pathname into path, basename, extension
+    if ($p{filename} =~ /^(.*)\%d\{([^\}]*)\}(.*)$/) {
+        $self->{rolling_filename_prefix}  = $1;
+        $self->{rolling_filename_postfix} = $3;
+        $self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new($2);
+        $self->{filename} = $self->_createFilename();
+    } elsif ($p{filename} =~ /^(.*)(\.[^\.]+)$/) {
+        $self->{rolling_filename_prefix}  = $1;
+        $self->{rolling_filename_postfix} = $2;
+        $self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new('-yyyy-MM-dd');
+        $self->{filename} = $self->_createFilename();
+    } else {
+        $self->{rolling_filename_prefix}  = $p{filename};
+        $self->{rolling_filename_postfix} = '';
+        $self->{rolling_filename_format}  = Log::Log4perl::DateFormat->new('.yyyy-MM-dd');
+        $self->{filename} = $self->_createFilename();
+    }
 
-	if (exists $p{current_symlink}) {
-		$self->{current_symlink} = $p{current_symlink};
-	}
+    if (exists $p{current_symlink}) {
+        $self->{current_symlink} = $p{current_symlink};
+    }
 
-	$self->{rolling_fh_pid} = $$;
-	$self->_make_handle();
+    $self->{rolling_fh_pid} = $$;
+    $self->_make_handle();
 
-	return $self;
+    return $self;
 }
 
 sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
-	my $self = shift;
-	my %p = @_;
+    my $self = shift;
+    my %p = @_;
 
-	my $filename = $self->_createFilename();
-	if ($filename ne $self->{filename}) {
-		$self->{filename} = $filename;
-		$self->{rolling_fh_pid} = 'x'; # force reopen
-	}
+    my $filename = $self->_createFilename();
+    if ($filename ne $self->{filename}) {
+        $self->{filename} = $filename;
+        $self->{rolling_fh_pid} = 'x'; # force reopen
+    }
 
-	if ( $self->{close} ) {
-		$self->_rolling_open_file;
-		$self->_lock();
-		my $fh = $self->{fh};
-		print $fh $p{message};
-		$self->_unlock();
-		close($fh);
-		$self->{fh} = undef;
-	} elsif (defined $self->{fh} and ($self->{rolling_fh_pid}||'') eq $$ and defined fileno $self->{fh}) { # flock won't work after a fork()
-		my $inode  = (stat($self->{fh}))[1];         # get real inode
-		my $finode = (stat($self->{filename}))[1];   # Stat the name for comparision
-		if(!defined($finode) || $inode != $finode) { # Oops someone moved things on us. So just reopen our log
-			$self->_rolling_open_file;
-		} elsif (!$self->{current_symlink_inited}) {
-			$self->_update_current_symlink;
-		}
-		$self->_lock();
-		my $fh = $self->{fh};
-		print $fh $p{message};
-		$self->_unlock();
-	} else {
-		$self->{rolling_fh_pid} = $$;
-		$self->_rolling_open_file;
-		$self->_lock();
-		my $fh = $self->{fh};
-		print $fh $p{message};
-		$self->_unlock();
-	}
+    if ( $self->{close} ) {
+        $self->_rolling_open_file;
+        $self->_lock();
+        my $fh = $self->{fh};
+        print $fh $p{message};
+        $self->_unlock();
+        close($fh);
+        $self->{fh} = undef;
+    } elsif (defined $self->{fh} and ($self->{rolling_fh_pid}||'') eq $$ and defined fileno $self->{fh}) { # flock won't work after a fork()
+        my $inode  = (stat($self->{fh}))[1];         # get real inode
+        my $finode = (stat($self->{filename}))[1];   # Stat the name for comparision
+        if(!defined($finode) || $inode != $finode) { # Oops someone moved things on us. So just reopen our log
+            $self->_rolling_open_file;
+        } elsif (!$self->{current_symlink_inited}) {
+            $self->_update_current_symlink;
+        }
+        $self->_lock();
+        my $fh = $self->{fh};
+        print $fh $p{message};
+        $self->_unlock();
+    } else {
+        $self->{rolling_fh_pid} = $$;
+        $self->_rolling_open_file;
+        $self->_lock();
+        my $fh = $self->{fh};
+        print $fh $p{message};
+        $self->_unlock();
+    }
 }
 
 sub _rolling_open_file {
-	my $self = shift;
+    my $self = shift;
 
-	$self->_open_file;
+    $self->_open_file;
 
-	$self->_update_current_symlink;
+    $self->_update_current_symlink;
 }
 
 sub _update_current_symlink {
-	my $self = shift;
+    my $self = shift;
 
-	return if !exists $self->{current_symlink};
+    return if !exists $self->{current_symlink};
 
-	my $current_symlink_value = readlink($self->{current_symlink});
+    my $current_symlink_value = readlink($self->{current_symlink});
 
-	if (!defined $current_symlink_value || $current_symlink_value ne $self->{filename}) {
-		my $temp_symlink_file = "$self->{current_symlink}.temp$$";
-		unlink($temp_symlink_file);
+    if (!defined $current_symlink_value || $current_symlink_value ne $self->{filename}) {
+        my $temp_symlink_file = "$self->{current_symlink}.temp$$";
+        unlink($temp_symlink_file);
 
-		symlink($self->{filename}, $temp_symlink_file)
-			|| die "unable to create symlink '$temp_symlink_file': $!";
+        symlink($self->{filename}, $temp_symlink_file)
+            || die "unable to create symlink '$temp_symlink_file': $!";
 
-		if (!rename($temp_symlink_file, $self->{current_symlink})) {
-			unlink($temp_symlink_file);
-			die "unable to overwrite symlink '$self->{current_symlink}': $!";
-		}
-	}
+        if (!rename($temp_symlink_file, $self->{current_symlink})) {
+            unlink($temp_symlink_file);
+            die "unable to overwrite symlink '$self->{current_symlink}': $!";
+        }
+    }
 
-	$self->{current_symlink_inited} = 1;
+    $self->{current_symlink_inited} = 1;
 }
 
 sub _lock { # borrowed from Log::Dispatch::FileRotate, Thanks!
-	my $self = shift;
-	flock($self->{fh},LOCK_EX);
-	# Make sure we are at the EOF
-	seek($self->{fh}, 0, 2);
-	return 1;
+    my $self = shift;
+    flock($self->{fh},LOCK_EX);
+    # Make sure we are at the EOF
+    seek($self->{fh}, 0, 2);
+    return 1;
 }
 
 sub _unlock { # borrowed from Log::Dispatch::FileRotate, Thanks!
-	my $self = shift;
-	flock($self->{fh},LOCK_UN);
-	return 1;
+    my $self = shift;
+    flock($self->{fh},LOCK_UN);
+    return 1;
 }
 
 sub _current_time { # borrowed from Log::Log4perl::Layout::PatternLayout, Thanks!
-	# Return secs and optionally msecs if we have Time::HiRes
-	if($TIME_HIRES_AVAILABLE) {
-		return (Time::HiRes::gettimeofday());
-	} else {
-		return (time(), 0);
-	}
+    # Return secs and optionally msecs if we have Time::HiRes
+    if($TIME_HIRES_AVAILABLE) {
+        return (Time::HiRes::gettimeofday());
+    } else {
+        return (time(), 0);
+    }
 }
 
 sub _createFilename {
-	my $self = shift;
-	return $self->{rolling_filename_prefix}
-	     . $self->_format()
-	     . $self->{rolling_filename_postfix};
+    my $self = shift;
+    return $self->{rolling_filename_prefix}
+         . $self->_format()
+         . $self->{rolling_filename_postfix};
 }
 
 sub _format {
-	my $self = shift;
-	my $result = $self->{rolling_filename_format}->format($self->_current_time());
-	$result =~ s/(\$+)/sprintf('%0'.length($1).'.'.length($1).'u', $$)/eg;
-	return $result;
+    my $self = shift;
+    my $result = $self->{rolling_filename_format}->format($self->_current_time());
+    $result =~ s/(\$+)/sprintf('%0'.length($1).'.'.length($1).'u', $$)/eg;
+    return $result;
 }
 
 1;
@@ -277,13 +277,13 @@ See L<Log::Dispatch::File> and chapter DESCRIPTION above.
 
 Original version; created by h2xs 1.22 with options
 
-	-A
-	-C
-	-X
-	-b5.6.1
-	-nLog::Dispatch::File::Rolling
-	--skip-exporter
-	-v0.99
+    -A
+    -C
+    -X
+    -b5.6.1
+    -nLog::Dispatch::File::Rolling
+    --skip-exporter
+    -v0.99
 
 =item 1.00
 

@@ -61,10 +61,10 @@ ok(scalar(@logfiles) == 1 or scalar(@logfiles) == 2);
 my $content = '';
 
 foreach my $file (@logfiles) {
-	open F, '<', $file;
-	local $/ = undef;
-	$content .= <F>;
-	close F;
+    open F, '<', $file;
+    local $/ = undef;
+    $content .= <F>;
+    close F;
 }
 
 ok($content =~ /$message/);
@@ -72,16 +72,16 @@ ok($content =~ /$message/);
 my $content2 = '';
 
 {
-	open F, '<', $curr_symlink_filename;
-	local $/ = undef;
-	$content2 .= <F>;
-	close F;
+    open F, '<', $curr_symlink_filename;
+    local $/ = undef;
+    $content2 .= <F>;
+    close F;
 }
 
 ok($content2 =~ /$message/);
 
 foreach my $file (@logfiles) {
-	unlink $file;
+    unlink $file;
 }
 
 unlink $curr_symlink_filename;

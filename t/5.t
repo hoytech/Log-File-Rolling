@@ -58,11 +58,11 @@ ok(scalar(@logfiles) == 1 or scalar(@logfiles) == 2);
 my $content = '';
 
 foreach my $file (@logfiles) {
-	open F, '<', $file;
-	local $/ = undef;
-	$content .= <F>;
-	close F;
-	unlink $file;
+    open F, '<', $file;
+    local $/ = undef;
+    $content .= <F>;
+    close F;
+    unlink $file;
 }
 
 ok($content =~ /$message/);

@@ -71,5 +71,5 @@ ok(scalar(@logfiles) == 1 or scalar(@logfiles) == 2);
 #########################7
 
 foreach my $file (@logfiles) {
-	unlink $file;
+    unlink $file;
 }
