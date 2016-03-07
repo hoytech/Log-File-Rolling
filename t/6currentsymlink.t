@@ -3,20 +3,8 @@
 
 #########################
 
-# change 'tests => 1' to 'tests => last_test_to_print';
-
-use Test;
-BEGIN { plan tests => 9 };
-use Log::Dispatch;
+use Test::More qw/no_plan/;
 use Log::File::Rolling;
-ok(1); # If we made it this far, we're ok.
-
-#########################1
-
-my $dispatcher = Log::Dispatch->new;
-ok($dispatcher);
-
-#########################2
 
 my $curr_symlink_filename = 'currsym';
 
@@ -30,33 +18,13 @@ my %params = (
 my $Rolling = Log::File::Rolling->new(%params);
 ok($Rolling);
 
-#########################3
-
-$dispatcher->add($Rolling);
-
-ok(1);
-
-#########################4
-
 my $message = 'logtest id ' . int(rand(9999));
 
-$dispatcher->log( level   => 'info', message => $message );
-
-ok(1);
-
-#########################5
-
-$dispatcher = $Rolling = undef;
-
-ok(1);
-
-#########################6
+$Rolling->log($message);
 
 my @logfiles = glob("logfile.2*");
 
 ok(scalar(@logfiles) == 1 or scalar(@logfiles) == 2);
-
-#########################7
 
 my $content = '';
 
@@ -85,5 +53,3 @@ foreach my $file (@logfiles) {
 }
 
 unlink $curr_symlink_filename;
-
-#########################8

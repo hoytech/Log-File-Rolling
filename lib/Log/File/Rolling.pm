@@ -5,14 +5,12 @@ use 5.006001;
 use strict;
 use warnings;
 
-use Log::Dispatch::File '2.37';
-our @ISA = qw(Log::Dispatch::File);
 use Time::Piece;
 use Fcntl ':flock'; # import LOCK_* constants
 
 our $VERSION = '1.09';
 
-# Preloaded methods go here.
+
 
 sub new {
     my $proto = shift;
@@ -22,11 +20,8 @@ sub new {
 
     my $self = bless {}, $class;
 
-    # only append mode is supported
-    $p{mode} = 'append';
-
     # base class initialization
-    $self->_basic_init(%p);
+    #$self->_basic_init(%p);
 
     $self->{timezone} = $p{timezone} || 'gmtime';
     die "unsupported timezone: '$self->{timezone}' (currently must be 'localtime' or 'gmtime')"
@@ -39,14 +34,15 @@ sub new {
     }
 
     $self->{rolling_fh_pid} = $$;
-    $self->_make_handle();
+    $self->{filename} = $self->_createFilename();
+    $self->_rolling_open_file();
 
     return $self;
 }
 
-sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
+sub log { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
     my $self = shift;
-    my %p = @_;
+    my $message = shift;
 
     my $filename = $self->_createFilename();
     if ($filename ne $self->{filename}) {
@@ -54,15 +50,7 @@ sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
         $self->{rolling_fh_pid} = 'x'; # force reopen
     }
 
-    if ( $self->{close} ) {
-        $self->_rolling_open_file;
-        $self->_lock();
-        my $fh = $self->{fh};
-        print $fh $p{message};
-        $self->_unlock();
-        close($fh);
-        $self->{fh} = undef;
-    } elsif (defined $self->{fh} and ($self->{rolling_fh_pid}||'') eq $$ and defined fileno $self->{fh}) { # flock won't work after a fork()
+    if (defined $self->{fh} and ($self->{rolling_fh_pid}||'') eq $$ and defined fileno $self->{fh}) { # flock won't work after a fork()
         my $inode  = (stat($self->{fh}))[1];         # get real inode
         my $finode = (stat($self->{filename}))[1];   # Stat the name for comparision
         if(!defined($finode) || $inode != $finode) { # Oops someone moved things on us. So just reopen our log
@@ -72,14 +60,14 @@ sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
         }
         $self->_lock();
         my $fh = $self->{fh};
-        print $fh $p{message};
+        print $fh $message;
         $self->_unlock();
     } else {
         $self->{rolling_fh_pid} = $$;
         $self->_rolling_open_file;
         $self->_lock();
         my $fh = $self->{fh};
-        print $fh $p{message};
+        print $fh $message;
         $self->_unlock();
     }
 }
@@ -87,7 +75,9 @@ sub log_message { # parts borrowed from Log::Dispatch::FileRotate, Thanks!
 sub _rolling_open_file {
     my $self = shift;
 
-    $self->_open_file;
+    open my $fh, '>>:raw', $self->{filename}
+        or die "Cannot write to '$self->{filename}': $!";
+    $self->{fh} = $fh;
 
     $self->_update_current_symlink;
 }
@@ -136,9 +126,14 @@ sub _createFilename {
 }
 
 1;
+
+
+
+
 __END__
 
-=for changes stop
+
+=encoding utf-8
 
 =head1 NAME
 
@@ -216,7 +211,7 @@ logs with no interruptions even when the filename rolls over.
 
 See L<Log::Dispatch::File> and chapter DESCRIPTION above.
 
-=item log_message()
+=item log()
 
 See L<Log::Dispatch::File> and chapter DESCRIPTION above.
 

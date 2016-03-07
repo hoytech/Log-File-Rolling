@@ -5,18 +5,8 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test;
-BEGIN { plan tests => 7 };
-use Log::Dispatch;
+use Test::More qw/no_plan/;
 use Log::File::Rolling;
-ok(1); # If we made it this far, we're ok.
-
-#########################1
-
-my $dispatcher = Log::Dispatch->new;
-ok($dispatcher);
-
-#########################2
 
 my %params = (
     name      => 'file',
@@ -27,27 +17,11 @@ my %params = (
 my $Rolling = Log::File::Rolling->new(%params);
 ok($Rolling);
 
-#########################3
-
-$dispatcher->add($Rolling);
-
-ok(1);
-
-#########################4
-
 my $message = 'logtest id ' . int(rand(9999));
 
-$dispatcher->log( level   => 'info', message => $message );
+$Rolling->log($message);
 
 ok(1);
-
-#########################5
-
-$dispatcher = $Rolling = undef;
-
-ok(1);
-
-#########################7
 
 my $content = '';
 
