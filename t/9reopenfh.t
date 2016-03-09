@@ -3,10 +3,11 @@
 
 #########################
 
-use Test::More qw/no_plan/;
+use Test::More;
 eval "
 use Test::Fork; ";
 plan skip_all => "Test::Fork required for this test" if $@;
+plan 'no_plan';
 
 use Log::File::Rolling;
 
