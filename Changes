@@ -1,10 +1,14 @@
 Log::File::Rolling HISTORY
 
+0.101  2016-03-21
+
+* Fix test failure if you don't have Test::Fork installed.
+
 0.100  2016-03-07
 
-*  Forked by Doug Hoyte from Michael Jacob's Log::Dispatch::File::Rolling,
-   which in turn was based on code from Eric Cholet and Mark Pfeiffer
-   (see POD for exact lineage).
+* Forked by Doug Hoyte from Michael Jacob's Log::Dispatch::File::Rolling,
+  which in turn was based on code from Eric Cholet and Mark Pfeiffer
+  (see POD for exact lineage).
 
 * Applied my current symlink patch (rt #95900)
 

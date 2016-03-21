@@ -7,7 +7,7 @@ use warnings;
 use Time::Piece;
 use Fcntl ':flock'; # import LOCK_* constants
 
-our $VERSION = '0.100';
+our $VERSION = '0.101';
 
 
 
